@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Technical Engine Documentation | AlcEngine</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<h1>Documento Técnico<br>Motor de Simulação AlcEngine</h1>
+<p><strong>Última atualização:</strong> Fevereiro de 2026</p>
+
+<hr>
+
+<p>
+Este documento descreve a lógica matemática e os fundamentos científicos
+aplicados no módulo <strong>AlcEngine</strong> do projeto <strong>AlcTime Pro</strong>.
+</p>
+
+<hr>
+
+<h2>1. Modelo Matemático Base</h2>
+
+<p>
+A simulação utiliza o <strong>Modelo de Widmark</strong>, amplamente aceito na toxicologia forense,
+estendido com uma abordagem compartimental para modelar a dinâmica de absorção e eliminação.
+</p>
+
+<h3>1.1 Coeficiente de Distribuição (r)</h3>
+
+<p>
+O Coeficiente de Widmark (<em>coefWidmark</em>) representa a fração do corpo
+na qual o álcool se dissolve.
+</p>
+
+<ul>
+  <li><strong>Masculino:</strong> 0.68</li>
+  <li><strong>Feminino:</strong> 0.55</li>
+</ul>
+
+<p>
+<em>(Valores médios estatísticos para a hidratação dos tecidos por gênero.)</em>
+</p>
+
+<hr>
+
+<h2>2. Dinâmica de Simulação</h2>
+
+<h3>2.1 Absorção Compartimental</h3>
+
+<p>
+O álcool não entra instantaneamente no sangue. O motor utiliza
+uma constante de taxa de absorção (<em>k<sub>abs</sub></em>).
+</p>
+
+<ul>
+  <li><strong>Meia-vida de absorção (t<sub>1/2</sub>):</strong> 12 minutos</li>
+  <li><strong>Constante k<sub>abs</sub>:</strong> ln(2) / 12 ≈ 0.05776 min⁻¹</li>
+</ul>
+
+<p>
+<strong>Lógica:</strong> a cada passo de 5 minutos, uma proporção do álcool presente
+no compartimento estomacal é transferida para o sangue,
+seguindo a função de decaimento exponencial:
+</p>
+
+<p>
+<strong>1 − e<sup>−k<sub>abs</sub> · passo</sup></strong>
+</p>
+
+<hr>
+
+<h3>2.2 Eliminação de Ordem Zero</h3>
+
+<p>
+Diferente de muitas substâncias, o álcool é eliminado do organismo humano
+por uma cinética de <strong>ordem zero</strong>, ou seja, uma taxa constante,
+independente da concentração enquanto houver substrato disponível.
+</p>
+
+<ul>
+  <li><strong>Taxa de eliminação:</strong> 0.15 g/L por hora</li>
+  <li><strong>Equivalente:</strong> 0.0125 g/L a cada 5 minutos</li>
+</ul>
+
+<hr>
+
+<h2>3. Constantes e Conversões</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Grandeza</th>
+      <th>Valor / Fator</th>
+      <th>Descrição</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Densidade do Álcool</td>
+      <td>0.8</td>
+      <td>Conversão de volume (ml) para massa (g)</td>
+    </tr>
+    <tr>
+      <td>G_TO_DG</td>
+      <td>10.0</td>
+      <td>Conversão de g/L (sangue) para dg/L</td>
+    </tr>
+    <tr>
+      <td>SANGUE_TO_AR</td>
+      <td>2.1</td>
+      <td>Relação TAS (sangue) para TAA (ar alveolar)</td>
+    </tr>
+    <tr>
+      <td>TAS_FACTOR</td>
+      <td>0.1</td>
+      <td>Conversão de g/L para porcentagem total (%TAS)</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr>
+
+<h2>4. Algoritmo de Execução</h2>
+
+<ol>
+  <li>
+    <strong>Cálculo da Dose Total:</strong>
+    a massa total de álcool em gramas é calculada
+    (Volume × Teor × 0.8).
+  </li>
+  <li>
+    <strong>BAC Teórico Máximo:</strong>
+    determinação do nível máximo hipotético caso todo o álcool
+    fosse absorvido instantaneamente.
+  </li>
+  <li>
+    <strong>Loop Incremental (passo de 5 minutos):</strong>
+    <ul>
+      <li><strong>Fase de consumo:</strong> álcool adicionado gradualmente
+      ao compartimento estomacal entre hora de início e fim.</li>
+      <li><strong>Fase de absorção:</strong> transferência parcial do estômago para o sangue.</li>
+      <li><strong>Fase de eliminação:</strong> redução constante de 0.15 g/L por hora.</li>
+    </ul>
+  </li>
+  <li>
+    <strong>Mapeamento de pontos:</strong>
+    a cada 15 minutos um ponto é gerado para composição do gráfico.
+  </li>
+  <li>
+    <strong>Critério de parada:</strong>
+    a simulação encerra quando o nível sanguíneo atinge zero
+    e o tempo decorrido ultrapassa o período de consumo.
+  </li>
+</ol>
+
+<hr>
+
+<h2>5. Isenção de Responsabilidade Técnica</h2>
+
+<p>
+Os cálculos fornecidos são estimativas baseadas em parâmetros médios.
+Variáveis individuais como:
+</p>
+
+<ul>
+  <li>Conteúdo estomacal (presença de alimento)</li>
+  <li>Estado metabólico hepático</li>
+  <li>Variações genéticas da enzima álcool desidrogenase</li>
+  <li>Hidratação e composição corporal específica</li>
+</ul>
+
+<p>
+<strong>Não são computadas individualmente</strong>,
+tornando o motor uma ferramenta de caráter
+<strong>puramente estatístico, educativo e informativo</strong>.
+</p>
+
+<hr>
+
+<h2>Documentação Relacionada</h2>
+
+<ul>
+  <li><a href="manifesto.html">Manifesto Técnico</a></li>
+  <li><a href="guia.html">Guia Rápido do Usuário</a></li>
+  <li><a href="privacy.html">Política de Privacidade</a></li>
+  <li><a href="terms.html">Termos de Uso</a></li>
+</ul>
+
+</body>
+</html>
